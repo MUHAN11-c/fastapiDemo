@@ -1,0 +1,90 @@
+"""
+=== 新闻缓存管理模块 ===
+
+这个模块封装了所有新闻相关的缓存读写方法喵~
+
+缓存的"键名"设计规则：
+- 新闻分类：news:categories
+- 新闻列表：news_list:{分类id}:{页码}:{每页数量}
+- 新闻详情：news:detail:{新闻id}
+- 相关新闻：news:related:{新闻id}:{分类id}
+
+键名分层设计的好处：
+- 一眼就能看出来缓存的是什么数据喵~
+- 方便批量操作（如删除所有 news: 开头的缓存）喵~
+
+缓存过期时间策略（数据越稳定，缓存越久）：
+- 分类：7200 秒（2小时）—— 分类几乎不变喵~
+- 列表：1800 秒（30分钟）—— 新新闻偶尔增加喵~
+- 详情：300 秒（5分钟）—— 浏览量会实时变化喵~
+- 相关新闻：1800 秒（30分钟）喵~
+"""
+
+from typing import List, Dict, Any, Optional
+
+from config.cache_conf import get_json_cache, set_cache
+
+# === Redis 键名前缀常量 ===
+CATEGORIES_KEY = "news:categories"      # 新闻分类的键名喵~
+NEWS_LIST_PREFIX = "news_list:"         # 新闻列表键名前缀喵~
+NEWS_DETAIL_PREFIX = "news:detail:"     # 新闻详情键名前缀喵~
+RELATED_NEWS_PREFIX = "news:related:"   # 相关新闻键名前缀喵~
+
+
+# === 获取新闻分类缓存 ===
+async def get_cached_categories():
+    return await get_json_cache(CATEGORIES_KEY)
+
+
+# === 写入新闻分类缓存 ===
+# expire 默认 7200 秒 = 2 小时喵~
+# 分类数据非常稳定，几乎不会变，所以过期时间设长一些喵~
+async def set_cache_categories(data: List[Dict[str, Any]], expire: int = 7200):
+    return await set_cache(CATEGORIES_KEY, data, expire)
+
+
+# === 写入新闻列表缓存 ===
+# key 格式：news_list:{分类id}:{页码}:{每页数量} 喵~
+# 这样不同分类、不同页码的数据不会互相覆盖喵~
+async def set_cache_news_list(category_id: Optional[int], page: int, size: int, news_list: List[Dict[str, Any]], expire: int = 1800):
+    category_part = category_id if category_id is not None else "all"
+    key = f"{NEWS_LIST_PREFIX}{category_part}:{page}:{size}"
+    return await set_cache(key, news_list, expire)
+
+
+# === 读取新闻列表缓存 ===
+async def get_cache_news_list(category_id: Optional[int], page: int, size: int):
+    category_part = category_id if category_id is not None else "all"
+    key = f"{NEWS_LIST_PREFIX}{category_part}:{page}:{size}"
+    return await get_json_cache(key)
+
+
+# === 获取缓存的新闻详情 ===
+async def get_cached_news_detail(news_id: int) -> Optional[Dict[str, Any]]:
+    """根据新闻 ID 获取缓存的新闻详情喵~"""
+    key = f"{NEWS_DETAIL_PREFIX}{news_id}"
+    return await get_json_cache(key)
+
+
+# === 缓存新闻详情 ===
+async def cache_news_detail(news_id: int, news_data: Dict[str, Any], expire: int = 300) -> bool:
+    """
+    缓存新闻详情喵~
+    expire 默认 300 秒 = 5 分钟（因为浏览量实时变化，需要较短过期时间）喵~
+    """
+    key = f"{NEWS_DETAIL_PREFIX}{news_id}"
+    return await set_cache(key, news_data, expire)
+
+
+# === 缓存相关新闻列表 ===
+async def cache_related_news(news_id: int, category_id: int, related_list: List[Dict[str, Any]], expire: int = 1800) -> bool:
+    """缓存某条新闻的"相关推荐"列表喵~"""
+    key = f"{RELATED_NEWS_PREFIX}{news_id}:{category_id}"
+    return await set_cache(key, related_list, expire)
+
+
+# === 获取缓存的相关新闻列表 ===
+async def get_cached_related_news(news_id: int, category_id: int) -> Optional[List[Dict[str, Any]]]:
+    """获取缓存的"相关推荐"列表喵~"""
+    key = f"{RELATED_NEWS_PREFIX}{news_id}:{category_id}"
+    return await get_json_cache(key)
