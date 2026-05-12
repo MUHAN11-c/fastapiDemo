@@ -6,9 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 FastAPI 从入门到实战学习项目喵~ 包含零基础学习示例和一个完整的"AI掘金头条"新闻应用后端喵~
 
-项目分为两个部分：
+项目分为三个部分：
 - `examples/` —— 零基础学习示例（19个文件，按编号顺序学习）喵~
 - `toutiao_backend/` —— 实战项目，完整的分层架构 FastAPI 应用喵~
+- `docs/` —— 学习文档（Git 零基础指南等）喵~
 
 ## Development Commands
 

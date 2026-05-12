@@ -63,27 +63,43 @@ git branch -m main
 比如：缓存文件、虚拟环境、IDE 配置、环境变量等喵~
 
 ```gitignore
-# Python 缓存文件
+# Python 缓存和编译文件
 __pycache__/
 *.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
 
-# 虚拟环境
+# 虚拟环境（几百MB，用 requirements.txt 代替）
 venv/
 .venv/
+env/
 
-# IDE 配置
+# IDE 配置文件
 .idea/
 .vscode/
+*.swp
+*.swo
 
-# 敏感信息
+# 环境变量（可能包含数据库密码等敏感信息）
 .env
 .env.local
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# Claude Code 配置
+.claude/
 ```
 
 为什么要忽略这些？
-- `__pycache__/` 是 Python 自动生成的，不需要上传喵~
-- `venv/` 太大（几百MB），用 `requirements.txt` 代替喵~
+- `__pycache__/` 是 Python 自动生成的缓存，不需要上传喵~
+- `venv/` 太大（几百MB），用 `requirements.txt` 记录依赖即可喵~
 - `.env` 可能包含数据库密码等敏感信息喵~
+- `.claude/` 是 Claude Code 的本地配置，不需要分享喵~
 
 ### 第5步：暂存文件（git add）
 
